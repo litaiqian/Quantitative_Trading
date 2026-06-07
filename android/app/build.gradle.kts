@@ -65,8 +65,5 @@ dependencies {
     // DataStore (token storage)
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
-    // Charts
-    implementation("co.yml:ycharts:2.1.0")
-
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
