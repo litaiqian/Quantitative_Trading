@@ -1,5 +1,6 @@
 package com.cryptoquant.ai.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -142,7 +143,7 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit) {
 }
 
 @Composable
-private fun inputColors() = OutlinedTextFieldDefaults.colors(
+internal fun inputColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = BrandBlue,
     unfocusedBorderColor = Dark600,
     focusedLabelColor = BrandBlue,
