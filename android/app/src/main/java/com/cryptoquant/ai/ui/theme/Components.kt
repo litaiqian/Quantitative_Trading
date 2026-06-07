@@ -35,7 +35,8 @@ fun CryptoCard(
     )
 }
 
-val SectionTitle: @Composable (String) -> Unit = { title ->
+@Composable
+fun SectionTitle(title: String) {
     Text(
         text = title,
         style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary),
