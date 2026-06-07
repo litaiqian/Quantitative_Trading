@@ -34,9 +34,13 @@ jobs:
       - name: Build Debug APK
         working-directory: android
         run: |
-          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/build.log
-          echo "=== LAST 100 LINES ===" 
-          tail -100 /tmp/build.log
+          ./gradlew assembleDebug --no-daemon --stacktrace
+          echo "=== BUILD OUTPUT ==="
+          ls -laR app/build/outputs/ 2>/dev/null || echo "No outputs dir"
+          echo "=== ALL APK FILES ==="
+          find . -name "*.apk" -type f 2>/dev/null || echo "No APK found"
+          echo "=== BUILD DIR ==="
+          ls -la app/build/ 2>/dev/null || echo "No build dir"
 
       - name: Find APK
         id: apk
