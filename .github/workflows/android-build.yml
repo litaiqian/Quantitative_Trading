@@ -13,18 +13,10 @@ permissions:
   actions: write
 
 jobs:
-  build-and-heal:
+  build:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        attempt: [1, 2, 3]  # Max 3 retries
-
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -32,66 +24,27 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: 'platforms;android-35 build-tools;35.0.0'
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Build APK (Attempt ${{ matrix.attempt }})
-        id: build
+      - name: Generate Gradle Wrapper
         working-directory: android
-        continue-on-error: true
+        run: gradle wrapper --gradle-version 8.7
+
+      - name: Build Debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Find APK
+        id: apk
         run: |
-          gradle wrapper --gradle-version 8.7 2>/dev/null || true
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
-          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
-
-      - name: Upload Build Log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log-attempt-${{ matrix.attempt }}
-          path: android/build.log
-          retention-days: 3
-
-      - name: Auto-Fix Common Errors
-        id: fix
-        if: steps.build.outcome == 'failure' && matrix.attempt < 3
-        run: |
-          python3 .github/scripts/auto_fix_android.py android/build.log android/ 2>&1 | tee fix.log
-          if grep -q "CHANGES_APPLIED" fix.log; then
-            echo "fixed=true" >> $GITHUB_OUTPUT
-          else
-            echo "fixed=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Commit & Push Fix
-        if: steps.fix.outputs.fixed == 'true'
-        run: |
-          git config user.name "🤖 CryptoQuant Bot"
-          git config user.email "bot@cryptoquant.ai"
-          git add android/
-          git commit -m "fix: auto-fix Android build errors [attempt ${{ matrix.attempt }}]" || true
-          git push
-
-      - name: Stop Retry on Success
-        if: steps.build.outcome == 'success'
-        run: echo "BUILD_SUCCESS=true" >> $GITHUB_ENV
+          APK=$(find android -name "*.apk" | head -1)
+          echo "APK found: $APK"
+          echo "path=$APK" >> $GITHUB_OUTPUT
+          ls -la "$APK"
 
       - name: Upload APK
-        if: steps.build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
-          name: CryptoQuantAI-v${{ github.run_number }}
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-
-      - name: Report Failure
-        if: steps.build.outcome == 'failure' && matrix.attempt == 3
-        run: |
-          echo "❌ Build failed after 3 attempts"
-          echo "Check build logs in the Artifacts section above"
-          exit 1
+          name: CryptoQuantAI
+          path: ${{ steps.apk.outputs.path }}
