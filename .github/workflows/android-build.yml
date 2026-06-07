@@ -41,7 +41,12 @@ jobs:
       - name: Find APK
         id: apk
         run: |
-          APK=$(find android -name "*.apk" | head -1)
+          echo "Searching for APK files..."
+          find . -name "*.apk" -type f 2>/dev/null
+          APK=$(find android -path "*/build/outputs/apk*" -name "*.apk" -type f | head -1)
+          if [ -z "$APK" ]; then
+            APK=$(find . -name "*.apk" -type f | head -1)
+          fi
           echo "APK found: $APK"
           echo "path=$APK" >> $GITHUB_OUTPUT
           ls -la "$APK"
