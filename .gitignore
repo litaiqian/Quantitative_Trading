@@ -33,3 +33,4 @@ android/local.properties
 # Temp
 tmp/
 *.log
+gradle-wrapper.jar
