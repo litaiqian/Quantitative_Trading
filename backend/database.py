@@ -8,8 +8,14 @@ from sqlalchemy.orm import DeclarativeBase, relationship, sessionmaker
 from datetime import datetime, timedelta
 import os
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./cryptoquant.db")
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {})
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "mysql+pymysql://Quantitative:tnHWTwMEejb4ReF3@ipla.top:3306/Quantitative"
+)
+# SQLite needs check_same_thread=False; MySQL needs pool_pre_ping for reconnection
+_connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
+_engine_kwargs = {"pool_pre_ping": True, "pool_recycle": 3600} if "mysql" in DATABASE_URL or "pymysql" in DATABASE_URL else {}
+engine = create_engine(DATABASE_URL, connect_args=_connect_args, **_engine_kwargs)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 class Base(DeclarativeBase):
